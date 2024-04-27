@@ -8,10 +8,9 @@
 
 class map {
   typedef struct chunk {
-    const byte *key;
     token *tok;
+    const byte *val;
     u32 isused;
-    chunk *next;
   } chunk;
   const u32 MAX = (1 << 11) * sizeof(chunk);
   chunk *chunks[(1 << 11) * sizeof(chunk)];
@@ -27,12 +26,11 @@ class map {
     return hash;
   }
 
-  chunk *createchunk(const byte *key, token *tok) {
+  chunk *createchunk(token *tok, const byte *val, u32 isused) {
     chunk *next = (chunk *)malloc(sizeof(chunk));
     next->tok = tok;
-    next->key = key;
-    next->isused = 1;
-    next->next = 0;
+    next->val = val;
+    next->isused = isused;
     return next;
   }
 
@@ -40,21 +38,10 @@ public:
   map() { init(); }
   void init() {
     for (u32 i = 0; i < MAX; i++) {
-      chunks[i] = createchunk(0, 0);
-      chunks[i]->isused = 0;
+      chunks[i] = createchunk(0, 0, 0);
     }
   }
-  void insert(const byte *key, token *tok) {
-    u32 index = getindex(key);
-    if (!chunks[index]->isused)
-      chunks[index] = createchunk(key, tok);
-    else {
-      chunk *next;
-      for (next = *&chunks[index]; next->isused; next = next->next)
-        ;
-      next->next = createchunk(key, tok);
-    }
-  }
+  void insert(const byte *key, token *tok) { u32 index = getindex(key); }
 };
 
 #endif
