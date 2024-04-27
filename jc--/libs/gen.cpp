@@ -5,7 +5,6 @@
 #include "jieimap.h"
 #include "jieistack.h"
 #include "map.h"
-#include "stack.h"
 #include "stdarg.h"
 #include "stdio.h"
 #include "stdlib.h"
@@ -244,14 +243,14 @@ extern "C" void gen(map *__table) {
   int32 offset = 0;
   for (leaf = __table->tokens; leaf; leaf = leaf->next) {
     printf("%s\n", token_t_bytes(leaf->type));
-    if (leaf->type == t_decl_func || leaf->type == t_main) {
+    if (leaf->type == t_decl_func || leaf->type == t_decl_main) {
       emit_func(leaf->val);
       regs->push(leaf->type);
     }
     if (leaf->type == t_brackopen) {
       switch (regs->pop()) {
       case t_decl_func:
-      case t_main:
+      case t_decl_main:
         emit_func_begin();
         regs->push(leaf->type);
         break;
