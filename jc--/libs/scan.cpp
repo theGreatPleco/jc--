@@ -60,7 +60,7 @@ static byte *mem_realloc(byte *buffer) {
   buffer = temp;
   return buffer;
 }
-
+u32 curr = 0;
 static int32 is_throwable_character(byte c) {
   return c == 0 || c == '\t' || c == EOL || c == '\r' || c == '\f' ? true
                                                                    : false;

@@ -35,6 +35,8 @@ typedef struct token {
 typedef struct node {
   struct node *prev;
   struct node *next;
+  u32 line;
+  byte curr;
   token *tok;
   byte *val;
 } node;
