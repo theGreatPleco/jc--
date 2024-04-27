@@ -8,6 +8,8 @@
 #include <ctype.h>
 #include <jieidefs.h>
 
+map *table = 0;
+
 token *toks = 0;
 token *prev = 0;
 token *end = 0;
@@ -133,9 +135,6 @@ void lex_first_pass(void) {
       type = t_bytes;
     if (*buffer == '=')
       type = t_asign;
-    if (*buffer == seperator)
-      type = t_seperator;
-
     if (check_is_type(buffer))
       type = check_is_type(buffer);
     if (check_is_keyword(buffer))
@@ -180,7 +179,8 @@ void lex_first_pass(void) {
 }
 
 extern "C" map *parse(node *list) {
-  table = mapinit();
+  table = (map *)malloc(sizeof(map));
+  table->init();
   head = list;
   lex_first_pass();
   for (token *t = toks; t != 0; t = t->next) {

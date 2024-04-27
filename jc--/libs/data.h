@@ -1,7 +1,9 @@
-#include "../decl.h"
-#include "stdio.h"
 #ifndef DATA_H
 #define DATA_H
+
+#include "../decl.h"
+#include "map.h"
+#include "stdio.h"
 
 #ifndef extern_
 #define extern_ extern

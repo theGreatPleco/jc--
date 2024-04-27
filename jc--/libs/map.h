@@ -1,7 +1,6 @@
 #ifndef MAP_H
 #define MAP_H 1
 #include "../decl.h"
-#include "data.h"
 #include "jieidecl.h"
 #include "jieidefs.h"
 #include "stdlib.h"
@@ -37,8 +36,10 @@ class map {
   }
 
 public:
+  token *tokens;
   map() { init(); }
   void init() {
+    tokens = 0;
     for (u32 i = 0; i < MAX; i++) {
       chunks[i] = createchunk(0, 0);
       chunks[i]->isused = 0;
