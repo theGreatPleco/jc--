@@ -114,10 +114,11 @@ s32 getsize(token_t type) {
   switch ((s32)type) {
   case t_int:
     return INTBYTES;
-  case t_short:
-    return SHORTBYTES;
+  default:
+    return 0;
+    /*  case t_short:
+        return SHORTBYTES; */
   }
-  return 0;
 }
 
 static void emit_func(byte *fname) {
