@@ -44,6 +44,12 @@ public:
       chunks[i]->isused = 0;
     }
   }
+  void deinit() {
+    for (u32 i = 0; i < MAX; i++) {
+      free(chunks[i]);
+    }
+    free(chunks);
+  }
   void insert(const byte *key, token *tok) {
     u32 index = getindex(key);
     if (!chunks[index]->isused)
@@ -54,6 +60,15 @@ public:
         ;
       next->next = createchunk(key, tok);
     }
+  }
+  token *get(const byte *key) {
+    u32 index = getindex(key);
+    if (bytescmp(key, chunks[index]->key))
+      return chunks[index]->tok;
+    chunk *val = *&chunks[index];
+    for (; val->next && val->key != key; val = val->next)
+      ;
+    return val->tok;
   }
 };
 
