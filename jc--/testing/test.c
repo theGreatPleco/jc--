@@ -1,7 +1,6 @@
-int main()
-{
-  int a = 1;
-  int b = 2;
-  int c = a + b;
-  return c;
+typedef char byte; 
+
+int main(){
+  byte a = 1;
+  return a + 2;
 }

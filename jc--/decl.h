@@ -66,20 +66,13 @@ static token_t getmathop(byte c) {
 
 static const byte *token_t_bytes(token_t type) {
   assert((s32)type);
-  if (type == t_decl_main)
-    return "main method";
-  if (type == t_decl_func)
-    return "declaring function";
-  if (type == t_decl_int || type == t_decl_byte)
-    return "declaring a type";
-  if (type == t_int || type == t_byte)
-    return "val";
-  if (type == t_brackopen || type == t_brackclose)
-    return "brack";
-  if (type == t_paraopen || t_paraclose)
-    return "para";
-  if (type == t_eos)
-    return "end of statement";
+  if (type == t_decl_main) return "main method";
+  if (type == t_decl_func) return "declaring function";
+  if (type == t_decl_int || type == t_decl_byte) return "declaring a type";
+  if (type == t_int || type == t_byte) return "val";
+  if (type == t_brackopen || type == t_brackclose) return "brack";
+  if (type == t_paraopen || t_paraclose) return "para";
+  if (type == t_eos) return "end of statement";
   return 0;
 }
 
