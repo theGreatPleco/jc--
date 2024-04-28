@@ -5,23 +5,16 @@
 
 typedef enum {
   t_none, /* null */
-  t_decl_main,
-  t_decl_func,
+  t_decl_main, t_decl_func,
   t_call_func,
-  t_decl_int,
-  t_decl_byte,
-  t_int,
-  t_byte,
-  t_bytes,
-  t_add,
-  t_sub,
-  t_var_int,
-  t_brackopen,
-  t_brackclose,
-  t_paraopen,
-  t_paraclose,
-  t_yeet,
-  t_asign,
+  t_decl_int,t_decl_byte, t_decl_bytes,
+  t_int,t_byte,t_bytes,
+  t_add,t_sub,
+  t_var_int, t_var_byte, t_var_bytes,
+  t_brackopen,t_brackclose,
+  t_paraopen,t_paraclose,
+  t_yeet, /* returning keyword */
+  t_asign, /* asignment keyword '=' */
   t_eos, /*end of statement */
 } token_t;
 

@@ -51,13 +51,10 @@ jiei::map<const byte *, const byte *> *usedpos =
 int32 prec(const byte *c) {
   switch (*c) {
   case '*':
-  case '/':
-    return 2;
+  case '/': return 2;
   case '+':
-  case '-':
-    return 1;
-  default:
-    return 0;
+  case '-': return 1;
+  default: return 0;
   }
 }
 
@@ -72,12 +69,9 @@ int32 countargs(byte *fmt) {
 
 static byte *getfmt(byte c) {
   switch (c) {
-  case 's':
-    return (byte *)"%s";
-  case 'd':
-    return (byte *)"%d";
-  default:
-    return 0;
+    case 's': return (byte *)"%s";
+    case 'd': return (byte *)"%d";
+    default: return 0;
   }
 }
 
