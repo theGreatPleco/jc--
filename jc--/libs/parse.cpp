@@ -60,24 +60,24 @@ static void __append(token *__tok, int32 __offset) {
   }
 }
 
+static s32 isdecltype(const byte *buff){
+  return bytescmp(buff, "int") || 
+  bytescmp(buff, "byte") || bytescmp(buff, "bytes") ? 1 : 0;
+}
+
 node *leaf = 0;
 
-static int32 check_scan(void) { return head ? true : false; }
+static int32 check_scan(void) { return head ? 1 : 0; }
 
 static token_t is_main_or_decl(byte *buffer) {
   return bytescmp(buffer, (byte *)"_main") ? t_decl_main : t_decl_func;
 }
 
 static token_t check_is_type(byte *buffer) {
-  if (!buffer)
-    exit(-1);
+  assert(buffer);
   token_t type = t_none;
-  if (bytescmp(buffer, (byte *)"int")) {
-    type = t_decl_int;
-  }
-  if (bytescmp(buffer, (byte *)"byte")) {
-    type = t_decl_byte;
-  }
+  if (bytescmp(buffer, (byte *)"int"))  type = t_decl_int;
+  if (bytescmp(buffer, (byte *)"byte")) type = t_decl_byte;
   return type;
 }
 
@@ -89,18 +89,12 @@ static token_t check_is_keyword(byte *buffer) {
 }
 
 static token_t check_is_heading(byte c) {
-  if (c == 0)
-    return t_none;
-  if (c == brack_open)
-    return t_brackopen;
-  if (c == brack_close)
-    return t_brackclose;
-  if (c == para_open)
-    return t_paraopen;
-  if (c == para_close)
-    return t_paraclose;
-  if (c == end_of_statement)
-    return t_eos;
+  if (c == 0) return t_none;
+  if (c == brack_open) return t_brackopen;
+  if (c == brack_close) return t_brackclose;
+  if (c == para_open) return t_paraopen;
+  if (c == para_close) return t_paraclose;
+  if (c == end_of_statement) return t_eos;
   return t_none;
 }
 
@@ -116,64 +110,42 @@ static int32 is_alp(byte *buffer) {
   return true;
 }
 
+jiei::map<const byte*, token_t> *vars = new jiei::map<const byte*, token_t>();
+
 void lex_first_pass(void) {
-  jiei::map<const byte *, token_t> *vars =
-      new jiei::map<const byte *, token_t>();
-  token_t type = t_none;
-  int32 stackpos = 0;
-  for (leaf = head; leaf != 0;) {
+  token_t type = (token_t)0;
+  for (leaf = head; leaf;) {
     type = t_none;
     byte *buffer = leaf->val;
     int32 offset = 0;
-
-    if (*buffer == '_')
-      type = is_main_or_decl(buffer);
-    if (*buffer == method_call)
-      type = t_call_func;
-
-    if (*buffer == '\"')
-      type = t_bytes;
-    if (*buffer == '=')
-      type = t_asign;
-    if (check_is_type(buffer))
-      type = check_is_type(buffer);
-    if (check_is_keyword(buffer))
-      type = check_is_keyword(buffer);
-    if (check_is_heading(*buffer))
-      type = check_is_heading(*buffer);
-
-    if (isdigit(*buffer))
-      type = t_int;
-
-    if (getmathop(*buffer))
-      type = getmathop(*buffer);
-    /* if (mapget(table, buffer).val) {
-      type = *mapget(table, buffer).type;
-    } */
-    if (vars->keyexist(buffer)) {
-      type = vars->get((const byte *)buffer);
+    switch(*buffer){
+      case method_decl: type = is_main_or_decl(buffer); break;
+      case method_call: type = t_call_func; break;
+      case '\"': type = t_bytes; break;
+      case asign: type = t_asign; break;
+      default: break;
     }
-    if (end && end->type == t_decl_int) {
-      type = t_int;
-      vars->insert((const byte *)buffer, t_var_int);
+    if (check_is_type(buffer)) type = check_is_type(buffer);
+    if (check_is_keyword(buffer)) type = check_is_keyword(buffer);
+    if (check_is_heading(*buffer)) type = check_is_heading(*buffer);
+
+    if (isdigit(*buffer)) type = t_int;
+    if (getmathop(*buffer)) type = getmathop(*buffer);
+
+    if(vars->keyexist((const byte*)buffer))  type = vars->get((const byte*)buffer);
+    if (isdecltype((const byte*)buffer)) type = t_decl_int;
+    if(end && gettypevar(end->type)){
+      type = t_var;
+      vars->insert((const byte*)buffer, gettypevar(end->type));
     }
-    printf("prev is %s and end is %s\n", end ? end->val : "prev is null",
-           buffer);
-    /* if (end && end->type == t_asign) {
-      type = end->prev->type;
-      mapappend(table, end->prev->val, buffer, type, -4);
-    } */
-    // if(end && check_is_type(end->val))
     __append(create_token(leaf, type), offset);
-    if (type == t_yeet && isdigit(leaf->next->val[0])) {
-      type = t_int;
-      leaf = leaf->next;
-      __append(create_token(leaf, type), offset);
-    } else if (type == t_decl_int && is_alp(leaf->next->val)) {
-      type = t_int;
-      leaf = leaf->next;
-      __append(create_token(leaf, type), offset);
-    }
+    leaf = leaf->next;
+  }
+}
+
+void lext_second_pass(){
+  for(token *leaf = toks; leaf;){
+    if(isvartok(leaf->type))table->insert(leaf->val, leaf);
     leaf = leaf->next;
   }
 }
@@ -187,6 +159,6 @@ extern "C" map *parse(node *list) {
     printf("%s: %s\n", t->val, token_t_bytes(t->type));
   }
   table->tokens = toks;
-  free(leaf);
+  delete vars;
   return table;
 }

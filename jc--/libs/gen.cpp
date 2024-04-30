@@ -1,5 +1,4 @@
 #include "../decl.h"
-#include "data.h"
 #include "jieidefs.h"
 #include "jieilist.h"
 #include "jieimap.h"
@@ -10,17 +9,14 @@
 #include "stdlib.h"
 
 FILE *output = 0;
-
-jiei::map<const byte *, const byte *> *usedlocs =
-    new jiei::map<const byte *, const byte *>();
-
+map *memtable;
 jiei::map<const byte *, const byte *> *hashtable =
     new jiei::map<const byte *, const byte *>();
 
 jiei::stack<token_t> *regs = new jiei::stack<token_t>();
 
-typedef struct {
-  byte *loc;
+typedef struct bucket{
+  byte *loc = 0;
   byte *val;
   token_t type;
 } bucket;
@@ -32,9 +28,6 @@ typedef struct {
 
 const byte BASEPTR[] = "%rsp";
 const byte STACKPTR[] = "%rbp";
-
-// const byte BASEPTR[] = "%esp";
-// const byte STACKPTR[] = "%ebp";
 
 const u16 LONGBYTES = 1 << 4;
 const u32 INTBYTES = 1 << 3;
@@ -103,18 +96,17 @@ int32 LFES = 0;
 
 token *leaf = 0;
 
-s32 getsize(token_t type) {
-  switch ((s32)type) {
-  case t_int:
-    return INTBYTES;
-  default:
-    return 0;
-    /*  case t_short:
-        return SHORTBYTES; */
-  }
+s32 getsize(token_t type) 
+{
+  switch ((s32)type) 
+  {
+  case t_int: return INTBYTES;
+  default: return 0;
+ }
 }
 
-static void emit_func(byte *fname) {
+static void emit_func(byte *fname) 
+{
   fname = bytescmp(fname, (byte *)"_main") ? (byte *)"main" : fname;
   emit((byte *)".globl #s\n", fname);
   emit((byte *)".type #s , @function\n", fname);
@@ -123,51 +115,52 @@ static void emit_func(byte *fname) {
   free(s);
 }
 
-static void emit_func_begin() {
+static void emit_func_begin() 
+{
   emit((byte *)"LFB#d:\n", LFBS++);
   emit((byte *)"endbr32\n");
   emit((byte *)"pushq %rbp\n");
   emit((byte *)"movq %rsp, %rbp\n");
 }
 
-static void emit_var_asign(token_t type, byte *val, int32 offset) {
+static void emit_var_asign(token_t type, byte *val, int32 offset) 
+{
   emit((byte *)"movl $#s , #d(%rbp)\n", val, offset);
 }
 
-static void emit_func_end(void) {
+static void emit_func_end(void) 
+{
   popq((byte *)"%rbp");
   ret();
   emit((byte *)"LFE#d:\n", LFES++);
 }
-static jiei::list<bucket> *exprec(token *next) {
+static jiei::list<bucket> *exprec(token *next) 
+{
   jiei::list<bucket> *eq = new jiei::list<bucket>();
   jiei::stack<bucket> *ops = new jiei::stack<bucket>();
   for (; next->type != t_eos;) {
     if (isnumerictype(next->type)) {
-      eq->add({0, next->val, next->type});
+      switch(memtable->keyexist(next->val)){
+        case true: eq->add({0,memtable->get(next->val)->val, next->type});
+        default: eq->add({0,next->val, next->type});
+      }
     }
     if (ismathop(next->type)) {
-      if (ops->isempty()) {
-        ops->push({0, next->val, next->type});
-        if (prec(ops->peek().val) == prec(next->val))
+      if (ops->isempty())  ops->push({0, next->val, next->type});
+      else if (prec(ops->peek().val) == prec(next->val))
           ops->push({0, next->val, next->type});
-      } else if (prec(ops->peek().val) < prec(next->val)) {
+      else if (prec(ops->peek().val) < prec(next->val))
         ops->push({0, next->val, next->type});
-      } else if (prec(ops->peek().val) > prec(next->val)) {
+      else if (prec(ops->peek().val) > prec(next->val)) 
         for (; !ops->isempty() && prec(ops->peek().val) > prec(next->val);) {
           eq->add(ops->pop());
-        }
         ops->push({0, next->val, next->type});
       }
     }
     next = next->next;
   }
-  for (; !ops->isempty();) {
-    eq->add(ops->pop());
-  }
-  for (u32 i = 0; i < eq->getsize(); i++) {
-    printf("equation:%s\n", eq->get(i).val);
-  }
+  for (; !ops->isempty();) eq->add(ops->pop());
+  for (u32 i = 0; i < eq->getsize(); i++) printf("equation:%s\n", eq->get(i).val);
   delete ops;
   return eq;
 }
@@ -194,7 +187,7 @@ static void eval(jiei::list<bucket> *s) {
   assert(ret);
   for (u32 i = 0; i < s->getsize(); i++) {
     bucket cur = s->get(i);
-    printf("cur is %s\n", cur.val);
+    printf("cur is %s and type is %s\n", cur.val, token_t_bytes(cur.type));
     if (isnumerictype(cur.type)) {
       eq->push(cur);
     }
@@ -203,9 +196,9 @@ static void eval(jiei::list<bucket> *s) {
       u32 res = 0;
       assert(!eq->isempty());
       bucket r = eq->pop();
-      printf("%s\n", r.val);
+      printf("r:%s\n", r.val);
       bucket l = eq->pop();
-      printf("%s\n", l.val);
+      printf("l:%s\n", l.val);
       emit("push #s#s\n", r.val[0] == '%' ? "" : "$", r.val);
       emit("push #s#s\n", l.val[0] == '%' ? "" : "$", l.val);
       switch (*cur.val) {
@@ -231,7 +224,12 @@ static void emit_yeet(token *tok) {
   emitrexpr(tok);
 }
 
+void deinit(){
+  delete memtable;
+}
+
 extern "C" void gen(map *__table) {
+  memtable = __table;
   create_file();
   start_text();
   int32 offset = 0;
@@ -260,6 +258,8 @@ extern "C" void gen(map *__table) {
     }
   }
   delete regs;
+  memtable->deinit();
+  free(memtable);
   fclose(output);
   /* int32 res = system("as output.s -o output.o");
   if (res)

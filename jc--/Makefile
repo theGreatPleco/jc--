@@ -5,7 +5,7 @@ dll:
 	$(call dll_comp, parse)
 	$(call dll_comp, gen)
 prog:
-	gcc main.cpp -ldl -L./libs -Wl,-rpath,'./libs/' -* -g -o jqc 
+	g++ main.cpp token_t.cpp -ldl -L./libs -Wl,-rpath,'./libs/' -* -g -o jc-- 
 	make dll
 dgb:
 	gdb ./jqcdg

@@ -12,8 +12,8 @@ class map {
     u32 isused;
     chunk *next;
   } chunk;
-  const u32 MAX = (1 << 11) * sizeof(chunk);
-  chunk *chunks[(1 << 11) * sizeof(chunk)];
+  const s32 MAX = 2048;
+  chunk *chunks[2048 * sizeof(chunk)];
   u32 getindex(const byte *key) {
     u32 hash = 5381;
     for (byte *trav = (byte *)key; *trav;) {
@@ -70,6 +70,9 @@ public:
     for (; val->next && val->key != key; val = val->next)
       ;
     return val->tok;
+  }
+  s32 keyexist(const byte *key){
+    return key && !isbytenum(*key) && chunks[getindex(key)]->isused ? true : false;
   }
 };
 

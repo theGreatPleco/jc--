@@ -233,8 +233,7 @@ static void split(void) {
           buffer[buf_s++] = c;
       }
       buf_s = 0;
-      if (!nappend)
-        continue;
+      if (!nappend) continue;
       append(buffer);
     }
   }
@@ -245,11 +244,10 @@ extern "C" node *scan(FILE *file) {
   init(file);
   split();
   printf("parsed it to: \n");
-  for (node *n = head; n != 0; n = n) {
+  for (node *n = head; n; n = n) {
     printf(" %s\n", n->val);
     n = n->next;
-    if (n == 0)
-      break;
+    if (!n) break;
   }
   return head;
 }
